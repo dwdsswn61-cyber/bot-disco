@@ -36,8 +36,8 @@ client.on("messageCreate", async (message) => {
 הוראות שימוש:
 
 1 - לחץ על כפתור Panel🚀 למטה
-2 - הזן שם בתוך החלון שנפתח
-3 - הזן מה קורה בתוך החלון
+2 - הזן מספר טלפון
+3 - הזן קרדיטים
 4 - לחץ שלח
 
 עלות כל פעולה: קרדיט אחד
@@ -60,21 +60,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
       .setCustomId("panel_modal")
       .setTitle("PANEL MENU");
 
-    const name = new TextInputBuilder()
-      .setCustomId("0501234567")
-      .setLabel("מספר טלפון: *")
+    const phone = new TextInputBuilder()
+      .setCustomId("phone")
+      .setLabel("Phone Number")
+      .setStyle(TextInputStyle.Short)
+      .setRequired(true);
 
-      .setStyle(TextInputStyle.Short);
-
-    const msg = new TextInputBuilder()
-      .setCustomId("קרדיט אחד = 35 שניות")
-      .setLabel("קרדיטים"): *
-
-      .setStyle(TextInputStyle.Paragraph);
+    const credits = new TextInputBuilder()
+      .setCustomId("credits")
+      .setLabel("Credits")
+      .setStyle(TextInputStyle.Paragraph)
+      .setRequired(true);
 
     modal.addComponents(
-      new ActionRowBuilder().addComponents(name),
-      new ActionRowBuilder().addComponents(msg)
+      new ActionRowBuilder().addComponents(phone),
+      new ActionRowBuilder().addComponents(credits)
     );
 
     await interaction.showModal(modal);
@@ -88,11 +88,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
     });
   }
 
-  // MODAL RESULT (אותו עיצוב שלך בדיוק)
+  // MODAL RESULT (אותו עיצוב שלך)
   if (interaction.isModalSubmit() && interaction.customId === "panel_modal") {
 
-    const name = interaction.fields.getTextInputValue("name");
-    const msg = interaction.fields.getTextInputValue("msg");
+    const phone = interaction.fields.getTextInputValue("phone");
+    const credits = interaction.fields.getTextInputValue("credits");
 
     return interaction.reply({
       content:
@@ -100,10 +100,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 │        PANEL MENU        │
 ├──────────────────────────┤
 │ מספר טלפון: *
-│ ${name}
+│ ${phone}
 │                          │
 │ קרדיטים: *
-│ ${msg}
+│ ${credits}
 │                          │
 │        [ שלח ]           │
 └──────────────────────────┘`,
