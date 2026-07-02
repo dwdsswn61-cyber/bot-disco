@@ -61,13 +61,13 @@ client.on(Events.InteractionCreate, async (interaction) => {
       .setTitle("PANEL MENU");
 
     const name = new TextInputBuilder()
-      .setCustomId("name")
+      .setCustomId("0501234567")
       .setLabel("מספר טלפון: *")
 
       .setStyle(TextInputStyle.Short);
 
     const msg = new TextInputBuilder()
-      .setCustomId("msg")
+      .setCustomId("קרדיט אחד = 35 שניות")
       .setLabel("קרדיטים"): *
 
       .setStyle(TextInputStyle.Paragraph);
