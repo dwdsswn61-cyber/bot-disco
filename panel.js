@@ -41,7 +41,7 @@ client.on("messageCreate", async (message) => {
 4 - לחץ שלח
 
 עלות כל פעולה: קרדיט אחד
-משך פעולה: 25 שניות (סימולציה)
+משך פעולה: 35 שניות (סימולציה)
 
 ──────────────────────────────`,
       components: [row]
@@ -62,12 +62,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     const name = new TextInputBuilder()
       .setCustomId("name")
-      .setLabel("מה השם שלך")
+      .setLabel("מספר טלפון: *")
+
       .setStyle(TextInputStyle.Short);
 
     const msg = new TextInputBuilder()
       .setCustomId("msg")
-      .setLabel("מה קורה")
+      .setLabel("קרדיטים"): *
+
       .setStyle(TextInputStyle.Paragraph);
 
     modal.addComponents(
