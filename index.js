@@ -20,11 +20,10 @@ const client = new Client({
     GatewayIntentBits.MessageContent
   ]
 });
-
 require("./ticket.js")(client);
 require("./casino.js")(client);
 require("./daily.js")(client);
-
+require("./panel.js")(client);
 client.once("ready", () => {
   console.log("BOT ONLINE:", client.user.tag);
 });
