@@ -9,7 +9,6 @@ const {
 module.exports = (client) => {
 
 const FILE = "./data.json";
-const DAILY_AMOUNT = 50;
 
 // =====================
 // DB
@@ -65,4 +64,16 @@ client.on("messageCreate", async (message) => {
       .setDescription("💰 Choose your game")
       .setImage("https://images.unsplash.com/photo-1604014237800-1c9102c3c6b4");
 
-    const row = new ActionRowBuilder().
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId("coinflip").setLabel("🪙 Coinflip").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId("slots").setLabel("🎰 Slots").setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId("roulette").setLabel("🎡 Roulette").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId("crash").setLabel("💣 Crash").setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId("blackjack").setLabel("🃏 Blackjack").setStyle(ButtonStyle.Secondary)
+    );
+
+    return message.channel.send({ embeds: [embed], components: [row] });
+  }
+});
+
+};
