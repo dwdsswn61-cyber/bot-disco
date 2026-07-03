@@ -37,13 +37,10 @@ client.once(Events.ClientReady, () => {
 });
 
 // =========================
-// GLOBAL INTERACTION FIX (REAL FIX)
+// GLOBAL FIX (SAFE INTERACTIONS)
 // =========================
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
-
-    // נותן לכל הקבצים שלך לעבוד כרגיל
-    // אבל מונע crash אם משהו נכשל
 
     if (!interaction.isRepliable()) return;
 
@@ -51,10 +48,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
     console.log("Interaction error:", err);
 
     try {
-      if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
+      if (
+        interaction.isRepliable?.() &&
+        !interaction.replied &&
+        !interaction.deferred
+      ) {
         await interaction.reply({
           content: "⛔ משהו השתבש, נסה שוב",
-          ephemeral: true
+          flags: 64
         });
       }
     } catch {}
