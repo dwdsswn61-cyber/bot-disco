@@ -3,7 +3,8 @@ const {
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
+  Events
 } = require("discord.js");
 
 module.exports = (client) => {
@@ -11,36 +12,38 @@ module.exports = (client) => {
 const FILE = "./data.json";
 
 // =====================
-// DB
+// DB SAFE
 // =====================
 function load() {
-  if (!fs.existsSync(FILE)) return {};
-  return JSON.parse(fs.readFileSync(FILE));
+  try {
+    if (!fs.existsSync(FILE)) return {};
+    return JSON.parse(fs.readFileSync(FILE));
+  } catch {
+    return {};
+  }
 }
 
 function save(data) {
   fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
 }
 
-function user(data, id) {
+function getUser(data, id) {
   if (!data[id]) {
     data[id] = {
       credits: 100,
-      lastDaily: 0,
       wins: 0,
-      losses: 0
+      losses: 0,
+      lastDaily: 0
     };
   }
   return data[id];
 }
 
-const games = new Map();
-
 // =====================
 // READY
 // =====================
 client.on("ready", () => {
-  console.log(`Casino Ultra Online: ${client.user.tag}`);
+  console.log(`Casino Online: ${client.user.tag}`);
 });
 
 // =====================
@@ -49,26 +52,23 @@ client.on("ready", () => {
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
-  let data = load();
-  let u = user(data, message.author.id);
-
   if (message.content === "!balance") {
-    return message.reply(`💳 ${u.credits} credits`);
+    const data = load();
+    const u = getUser(data, message.author.id);
+    return message.reply(`💳 Balance: ${u.credits}`);
   }
 
   if (message.content === "!casino") {
 
     const embed = new EmbedBuilder()
-      .setColor("#0f0f0f")
+      .setColor("#111111")
       .setTitle("🎰 ROYAL CASINO")
-      .setDescription("💰 Choose your game")
-      .setImage("https://images.unsplash.com/photo-1604014237800-1c9102c3c6b4");
+      .setDescription("Choose a game below");
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("coinflip").setLabel("🪙 Coinflip").setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId("slots").setLabel("🎰 Slots").setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId("roulette").setLabel("🎡 Roulette").setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId("crash").setLabel("💣 Crash").setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId("roulette").setLabel("🎡 Roulette").setStyle(ButtonStyle.Danger),
       new ButtonBuilder().setCustomId("blackjack").setLabel("🃏 Blackjack").setStyle(ButtonStyle.Secondary)
     );
 
@@ -77,31 +77,97 @@ client.on("messageCreate", async (message) => {
 });
 
 // =====================
-// FIX INTERACTIONS (IMPORTANT)
+// INTERACTIONS SAFE
 // =====================
-client.on("interactionCreate", async (interaction) => {
+client.on(Events.InteractionCreate, async (interaction) => {
+
+  if (!interaction.isButton()) return;
+
   try {
 
-    if (!interaction.isButton()) return;
+    // 🔥 חובה: מונע 10062
+    await interaction.deferReply({ ephemeral: true });
 
     const id = interaction.customId;
 
-    // 🔥 חשוב: מונע Unknown interaction (10062)
-    await interaction.deferReply({ ephemeral: true }).catch(() => {});
+    let data = load();
+    let u = getUser(data, interaction.user.id);
 
-    if (id === "coinflip") return interaction.editReply("🪙 Coinflip coming soon");
-    if (id === "slots") return interaction.editReply("🎰 Slots coming soon");
-    if (id === "roulette") return interaction.editReply("🎡 Roulette coming soon");
-    if (id === "crash") return interaction.editReply("💣 Crash coming soon");
-    if (id === "blackjack") return interaction.editReply("🃏 Blackjack coming soon");
+    // =====================
+    // GAMES (SIMULATION)
+    // =====================
+
+    if (id === "coinflip") {
+      const win = Math.random() > 0.5;
+
+      if (win) {
+        u.credits += 10;
+        u.wins++;
+        save(data);
+        return interaction.editReply("🪙 You WON +10 credits");
+      } else {
+        u.credits -= 10;
+        u.losses++;
+        save(data);
+        return interaction.editReply("🪙 You LOST -10 credits");
+      }
+    }
+
+    if (id === "slots") {
+      const win = Math.random() > 0.7;
+
+      if (win) {
+        u.credits += 25;
+        u.wins++;
+        save(data);
+        return interaction.editReply("🎰 JACKPOT +25 credits");
+      } else {
+        u.credits -= 10;
+        u.losses++;
+        save(data);
+        return interaction.editReply("🎰 Lost -10 credits");
+      }
+    }
+
+    if (id === "roulette") {
+      const win = Math.random() > 0.6;
+
+      if (win) {
+        u.credits += 15;
+        u.wins++;
+        save(data);
+        return interaction.editReply("🎡 You WON +15 credits");
+      } else {
+        u.credits -= 15;
+        u.losses++;
+        save(data);
+        return interaction.editReply("🎡 You LOST -15 credits");
+      }
+    }
+
+    if (id === "blackjack") {
+      const win = Math.random() > 0.55;
+
+      if (win) {
+        u.credits += 20;
+        u.wins++;
+        save(data);
+        return interaction.editReply("🃏 Blackjack WIN +20");
+      } else {
+        u.credits -= 20;
+        u.losses++;
+        save(data);
+        return interaction.editReply("🃏 Blackjack LOST -20");
+      }
+    }
 
   } catch (err) {
     console.log("Casino error:", err);
 
     try {
-      if (interaction.isRepliable() && !interaction.replied) {
+      if (!interaction.replied) {
         await interaction.reply({
-          content: "⛔ שגיאה, נסה שוב",
+          content: "⛔ Error occurred",
           ephemeral: true
         });
       }
