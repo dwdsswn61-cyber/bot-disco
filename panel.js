@@ -51,60 +51,64 @@ module.exports = (client) => {
 
   client.on(Events.InteractionCreate, async (interaction) => {
 
-    if (!interaction.isButton() && !interaction.isModalSubmit()) return;
+    try {
 
-    // =========================
-    // OPEN MODAL
-    // =========================
-    if (interaction.isButton() && interaction.customId === "panel_open") {
+      if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
-      const modal = new ModalBuilder()
-        .setCustomId("panel_modal")
-        .setTitle("PANEL MENU");
+      // =========================
+      // PANEL OPEN (FIX 10062)
+      // =========================
+      if (interaction.isButton() && interaction.customId === "panel_open") {
 
-      const phone = new TextInputBuilder()
-        .setCustomId("phone")
-        .setLabel("Phone Number")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
+        // 🔥 FIX חשוב: מונע timeout
+        await interaction.deferUpdate();
 
-      const credits = new TextInputBuilder()
-        .setCustomId("credits")
-        .setLabel("Credits")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
+        const modal = new ModalBuilder()
+          .setCustomId("panel_modal")
+          .setTitle("PANEL MENU");
 
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(phone),
-        new ActionRowBuilder().addComponents(credits)
-      );
+        const phone = new TextInputBuilder()
+          .setCustomId("phone")
+          .setLabel("Phone Number")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
 
-      return interaction.showModal(modal);
-    }
+        const credits = new TextInputBuilder()
+          .setCustomId("credits")
+          .setLabel("Credits")
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(true);
 
-    // =========================
-    // BUY CREDITS (FIX חשוב)
-    // =========================
-    if (interaction.isButton() && interaction.customId === "buy_credits") {
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(phone),
+          new ActionRowBuilder().addComponents(credits)
+        );
 
-      // 🔥 FIX 10062: קודם defer ואז reply
-      await interaction.deferReply({ ephemeral: true });
+        return interaction.showModal(modal);
+      }
 
-      return interaction.editReply({
-        content: "🎫 Buy Credits opened (simulation)"
-      });
-    }
+      // =========================
+      // BUY CREDITS (FIX יציב)
+      // =========================
+      if (interaction.isButton() && interaction.customId === "buy_credits") {
 
-    // =========================
-    // MODAL RESULT
-    // =========================
-    if (interaction.isModalSubmit() && interaction.customId === "panel_modal") {
+        await interaction.deferReply({ ephemeral: true });
 
-      const phone = interaction.fields.getTextInputValue("phone");
-      const credits = interaction.fields.getTextInputValue("credits");
+        return interaction.editReply({
+          content: "🎫 Buy Credits opened (simulation)"
+        });
+      }
 
-      return interaction.reply({
-        content:
+      // =========================
+      // MODAL RESULT
+      // =========================
+      if (interaction.isModalSubmit() && interaction.customId === "panel_modal") {
+
+        const phone = interaction.fields.getTextInputValue("phone");
+        const credits = interaction.fields.getTextInputValue("credits");
+
+        return interaction.reply({
+          content:
 `┌──────────────────────────┐
 │        PANEL MENU        │
 ├──────────────────────────┤
@@ -116,8 +120,21 @@ module.exports = (client) => {
 │                          │
 │        [ שלח ]           │
 └──────────────────────────┘`,
-        ephemeral: true
-      });
+          ephemeral: true
+        });
+      }
+
+    } catch (err) {
+      console.log("Panel error:", err);
+
+      if (!interaction.replied && !interaction.deferred) {
+        try {
+          await interaction.reply({
+            content: "❌ שגיאה במערכת",
+            ephemeral: true
+          });
+        } catch {}
+      }
     }
 
   });
