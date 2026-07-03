@@ -54,100 +54,106 @@ module.exports = (client) => {
   });
 
   // =========================
-  // INTERACTIONS
+  // INTERACTIONS (FIXED ONLY LOGIC)
   // =========================
   client.on(Events.InteractionCreate, async (interaction) => {
 
-    // OPEN MODAL
-    if (interaction.isButton() && interaction.customId === "open_ticket") {
+    try {
 
-      const modal = new ModalBuilder()
-        .setCustomId("ticket_modal")
-        .setTitle("📨 Ticket Form");
+      // OPEN MODAL
+      if (interaction.isButton() && interaction.customId === "open_ticket") {
 
-      const name = new TextInputBuilder()
-        .setCustomId("name")
-        .setLabel("👤 מה השם שלך בשרת?")
-        .setStyle(TextInputStyle.Short)
-        .setRequired(true);
+        const modal = new ModalBuilder()
+          .setCustomId("ticket_modal")
+          .setTitle("📨 Ticket Form");
 
-      const reason = new TextInputBuilder()
-        .setCustomId("reason")
-        .setLabel("❓ מה הסיבה לפתיחת הטיקט?")
-        .setStyle(TextInputStyle.Paragraph)
-        .setRequired(true);
+        const name = new TextInputBuilder()
+          .setCustomId("name")
+          .setLabel("👤 מה השם שלך בשרת?")
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
 
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(name),
-        new ActionRowBuilder().addComponents(reason)
-      );
+        const reason = new TextInputBuilder()
+          .setCustomId("reason")
+          .setLabel("❓ מה הסיבה לפתיחת הטיקט?")
+          .setStyle(TextInputStyle.Paragraph)
+          .setRequired(true);
 
-      return interaction.showModal(modal);
-    }
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(name),
+          new ActionRowBuilder().addComponents(reason)
+        );
 
-    // CREATE TICKET
-    if (interaction.isModalSubmit() && interaction.customId === "ticket_modal") {
+        return await interaction.showModal(modal);
+      }
 
-      const name = interaction.fields.getTextInputValue("name");
-      const reason = interaction.fields.getTextInputValue("reason");
+      // CREATE TICKET
+      if (interaction.isModalSubmit() && interaction.customId === "ticket_modal") {
 
-      const channel = await interaction.guild.channels.create({
-        name: `ticket-${interaction.user.username}`,
-        type: ChannelType.GuildText,
-        permissionOverwrites: [
-          {
-            id: interaction.guild.id,
-            deny: [PermissionsBitField.Flags.ViewChannel]
-          },
-          {
-            id: interaction.user.id,
-            allow: [
-              PermissionsBitField.Flags.ViewChannel,
-              PermissionsBitField.Flags.SendMessages,
-              PermissionsBitField.Flags.ReadMessageHistory
-            ]
-          }
-        ]
-      });
+        const name = interaction.fields.getTextInputValue("name");
+        const reason = interaction.fields.getTextInputValue("reason");
 
-      const embed = new EmbedBuilder()
-        .setColor("#2b2d31")
-        .setTitle("📩 Ticket Created")
-        .setDescription(
+        const channel = await interaction.guild.channels.create({
+          name: `ticket-${interaction.user.username}`,
+          type: ChannelType.GuildText,
+          permissionOverwrites: [
+            {
+              id: interaction.guild.id,
+              deny: [PermissionsBitField.Flags.ViewChannel]
+            },
+            {
+              id: interaction.user.id,
+              allow: [
+                PermissionsBitField.Flags.ViewChannel,
+                PermissionsBitField.Flags.SendMessages,
+                PermissionsBitField.Flags.ReadMessageHistory
+              ]
+            }
+          ]
+        });
+
+        const embed = new EmbedBuilder()
+          .setColor("#2b2d31")
+          .setTitle("📩 Ticket Created")
+          .setDescription(
 `👤 שם: ${name}
 ❓ סיבה: ${reason}
 👤 יוצר: ${interaction.user}`
-        )
-        .setTimestamp();
+          )
+          .setTimestamp();
 
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("close_ticket")
-          .setLabel("🔒 Close Ticket")
-          .setStyle(ButtonStyle.Danger)
-      );
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("close_ticket")
+            .setLabel("🔒 Close Ticket")
+            .setStyle(ButtonStyle.Danger)
+        );
 
-      await channel.send({
-        embeds: [embed],
-        components: [row]
-      });
+        await channel.send({
+          embeds: [embed],
+          components: [row]
+        });
 
-      return interaction.reply({
-        content: `✔️ הטיקט נפתח: ${channel}`,
-        ephemeral: true
-      });
-    }
+        return interaction.reply({
+          content: `✔️ הטיקט נפתח: ${channel}`,
+          ephemeral: true
+        });
+      }
 
-    // CLOSE TICKET
-    if (interaction.isButton() && interaction.customId === "close_ticket") {
+      // CLOSE TICKET
+      if (interaction.isButton() && interaction.customId === "close_ticket") {
 
-      await interaction.reply({
-        content: "🔒 סוגר טיקט..."
-      });
+        await interaction.reply({
+          content: "🔒 סוגר טיקט..."
+        });
 
-      setTimeout(() => {
-        interaction.channel.delete().catch(() => {});
-      }, 2500);
+        setTimeout(() => {
+          interaction.channel.delete().catch(() => {});
+        }, 2500);
+      }
+
+    } catch (err) {
+      console.log("Interaction error:", err);
     }
 
   });
