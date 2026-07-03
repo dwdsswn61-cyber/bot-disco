@@ -1,5 +1,5 @@
 const express = require("express");
-const { Client, GatewayIntentBits } = require("discord.js");
+const { Client, GatewayIntentBits, Events } = require("discord.js");
 
 const app = express();
 
@@ -21,13 +21,41 @@ const client = new Client({
   ]
 });
 
+// =========================
+// LOAD MODULES
+// =========================
 require("./ticket.js")(client);
 require("./casino.js")(client);
 require("./daily.js")(client);
-require("./panel.js")(client); // ✅ הוספתי
+require("./panel.js")(client);
 
-client.once("ready", () => {
+// =========================
+// READY
+// =========================
+client.once(Events.ClientReady, () => {
   console.log("BOT ONLINE:", client.user.tag);
+});
+
+// =========================
+// GLOBAL INTERACTION FIX (IMPORTANT)
+// =========================
+client.on(Events.InteractionCreate, async (interaction) => {
+  try {
+    // כל הלוגיקה שלך כבר בקבצים אחרים
+    // זה רק "ביטוח" נגד crash ו-failed interaction
+
+  } catch (err) {
+    console.log("Interaction error:", err);
+
+    if (interaction.isRepliable()) {
+      try {
+        await interaction.reply({
+          content: "⛔ משהו השתבש, נסה שוב",
+          ephemeral: true
+        });
+      } catch {}
+    }
+  }
 });
 
 client.login(process.env.DISCORD_TOKEN);
