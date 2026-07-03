@@ -32,12 +32,6 @@ module.exports = (client) => {
 
 🚀 לחץ על הכפתור למטה כדי לפתוח טיקט
 👨‍💻 צוות השרת יעזור לך
-
-━━━━━━━━━━━━━━━
-⚡ לפני פתיחת טיקט:
-• תהיה ברור
-• אל תספאם
-• תהיה מכבד
 ━━━━━━━━━━━━━━━`
         );
 
@@ -56,25 +50,19 @@ module.exports = (client) => {
   });
 
   // =========================
-  // INTERACTIONS (FIXED SAFETY)
+  // INTERACTIONS
   // =========================
   client.on(Events.InteractionCreate, async (interaction) => {
 
     try {
 
-      // 🔥 FIX חשוב: מונע כפילויות בין קבצים / handlers
+      // רק כפתורים / מודלים
       if (!interaction.isButton() && !interaction.isModalSubmit()) return;
-      if (interaction.replied || interaction.deferred) return;
 
-      console.log(
-        "[Ticket]",
-        interaction.customId,
-        interaction.isButton(),
-        interaction.isModalSubmit()
-      );
+      console.log("[Ticket]", interaction.customId);
 
       // =========================
-      // OPEN MODAL
+      // OPEN MODAL (FIX חשוב)
       // =========================
       if (interaction.isButton() && interaction.customId === "open_ticket") {
 
@@ -90,7 +78,7 @@ module.exports = (client) => {
 
         const reason = new TextInputBuilder()
           .setCustomId("reason")
-          .setLabel("מה הסיבה לפתיחת טיקט?")
+          .setLabel("מה הסיבה?")
           .setStyle(TextInputStyle.Paragraph)
           .setRequired(true);
 
@@ -132,11 +120,7 @@ module.exports = (client) => {
         const embed = new EmbedBuilder()
           .setColor("#2b2d31")
           .setTitle("📩 Ticket Created")
-          .setDescription(
-`👤 שם: ${name}
-❓ סיבה: ${reason}
-👤 משתמש: ${interaction.user.tag}`
-          );
+          .setDescription(`👤 ${name}\n❓ ${reason}`);
 
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
@@ -151,7 +135,7 @@ module.exports = (client) => {
         });
 
         return interaction.reply({
-          content: `✔️ הטיקט נפתח: ${channel}`,
+          content: `✔️ נפתח טיקט: ${channel}`,
           ephemeral: true
         });
       }
@@ -160,8 +144,6 @@ module.exports = (client) => {
       // CLOSE TICKET
       // =========================
       if (interaction.isButton() && interaction.customId === "close_ticket") {
-
-        if (interaction.replied || interaction.deferred) return;
 
         await interaction.reply({
           content: "🔒 סוגר טיקט..."
@@ -175,14 +157,12 @@ module.exports = (client) => {
     } catch (err) {
       console.log("Ticket error:", err);
 
-      if (interaction.isRepliable && interaction.isRepliable()) {
+      if (!interaction.replied && !interaction.deferred) {
         try {
-          if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({
-              content: "❌ שגיאה בטיקט",
-              ephemeral: true
-            });
-          }
+          await interaction.reply({
+            content: "❌ שגיאה בטיקט",
+            ephemeral: true
+          });
         } catch {}
       }
     }
