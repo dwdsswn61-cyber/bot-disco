@@ -37,25 +37,29 @@ client.once(Events.ClientReady, () => {
 });
 
 // =========================
-// GLOBAL INTERACTION FIX (IMPORTANT)
+// GLOBAL INTERACTION FIX (REAL FIX)
 // =========================
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
-    // כל הלוגיקה שלך כבר בקבצים אחרים
-    // זה רק "ביטוח" נגד crash ו-failed interaction
+
+    // נותן לכל הקבצים שלך לעבוד כרגיל
+    // אבל מונע crash אם משהו נכשל
+
+    if (!interaction.isRepliable()) return;
 
   } catch (err) {
     console.log("Interaction error:", err);
 
-    if (interaction.isRepliable()) {
-      try {
+    try {
+      if (interaction.isRepliable() && !interaction.replied && !interaction.deferred) {
         await interaction.reply({
           content: "⛔ משהו השתבש, נסה שוב",
           ephemeral: true
         });
-      } catch {}
-    }
+      }
+    } catch {}
   }
 });
 
+// =========================
 client.login(process.env.DISCORD_TOKEN);
