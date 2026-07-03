@@ -10,25 +10,28 @@ const {
 
 module.exports = (client) => {
 
-client.on("messageCreate", async (message) => {
-  if (message.author.bot) return;
+  // =========================
+  // PANEL COMMAND
+  // =========================
+  client.on("messageCreate", async (message) => {
+    if (message.author.bot) return;
 
-  if (message.content === "!panel") {
+    if (message.content === "!panel") {
 
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("panel_open")
-        .setLabel("Panel🚀")
-        .setStyle(ButtonStyle.Danger),
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("panel_open")
+          .setLabel("Panel🚀")
+          .setStyle(ButtonStyle.Danger),
 
-      new ButtonBuilder()
-        .setCustomId("buy_credits")
-        .setLabel("🎫 Buy Credits")
-        .setStyle(ButtonStyle.Success)
-    );
+        new ButtonBuilder()
+          .setCustomId("buy_credits")
+          .setLabel("🎫 Buy Credits")
+          .setStyle(ButtonStyle.Success)
+      );
 
-    message.channel.send({
-      content:
+      return message.channel.send({
+        content:
 `──────────────────────────────
             PANEL
 ──────────────────────────────
@@ -44,58 +47,67 @@ client.on("messageCreate", async (message) => {
 משך פעולה: 35 שניות (סימולציה)
 
 ──────────────────────────────`,
-      components: [row]
-    });
-  }
-});
+        components: [row]
+      });
+    }
+  });
 
-client.on(Events.InteractionCreate, async (interaction) => {
+  // =========================
+  // INTERACTIONS
+  // =========================
+  client.on(Events.InteractionCreate, async (interaction) => {
 
-  if (!interaction.isButton() && !interaction.isModalSubmit()) return;
+    if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
-  // OPEN MODAL
-  if (interaction.isButton() && interaction.customId === "panel_open") {
+    // =========================
+    // OPEN MODAL
+    // =========================
+    if (interaction.isButton() && interaction.customId === "panel_open") {
 
-    const modal = new ModalBuilder()
-      .setCustomId("panel_modal")
-      .setTitle("PANEL MENU");
+      const modal = new ModalBuilder()
+        .setCustomId("panel_modal")
+        .setTitle("PANEL MENU");
 
-    const phone = new TextInputBuilder()
-      .setCustomId("phone")
-      .setLabel("Phone Number")
-      .setStyle(TextInputStyle.Short)
-      .setRequired(true);
+      const phone = new TextInputBuilder()
+        .setCustomId("phone")
+        .setLabel("Phone Number")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
 
-    const credits = new TextInputBuilder()
-      .setCustomId("credits")
-      .setLabel("Credits")
-      .setStyle(TextInputStyle.Paragraph)
-      .setRequired(true);
+      const credits = new TextInputBuilder()
+        .setCustomId("credits")
+        .setLabel("Credits")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
 
-    modal.addComponents(
-      new ActionRowBuilder().addComponents(phone),
-      new ActionRowBuilder().addComponents(credits)
-    );
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(phone),
+        new ActionRowBuilder().addComponents(credits)
+      );
 
-    await interaction.showModal(modal);
-  }
+      return interaction.showModal(modal);
+    }
 
-  // BUY CREDITS
-  if (interaction.isButton() && interaction.customId === "buy_credits") {
-    return interaction.reply({
-      content: "🎫 Buy Credits opened (simulation)",
-      ephemeral: true
-    });
-  }
+    // =========================
+    // BUY CREDITS
+    // =========================
+    if (interaction.isButton() && interaction.customId === "buy_credits") {
+      return interaction.reply({
+        content: "🎫 Buy Credits opened (simulation)",
+        ephemeral: true
+      });
+    }
 
-  // MODAL RESULT
-  if (interaction.isModalSubmit() && interaction.customId === "panel_modal") {
+    // =========================
+    // MODAL RESULT
+    // =========================
+    if (interaction.isModalSubmit() && interaction.customId === "panel_modal") {
 
-    const phone = interaction.fields.getTextInputValue("phone");
-    const credits = interaction.fields.getTextInputValue("credits");
+      const phone = interaction.fields.getTextInputValue("phone");
+      const credits = interaction.fields.getTextInputValue("credits");
 
-    return interaction.reply({
-      content:
+      return interaction.reply({
+        content:
 `┌──────────────────────────┐
 │        PANEL MENU        │
 ├──────────────────────────┤
@@ -107,10 +119,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 │                          │
 │        [ שלח ]           │
 └──────────────────────────┘`,
-      ephemeral: true
-    });
-  }
+        ephemeral: true
+      });
+    }
 
-});
+  });
 
 };
