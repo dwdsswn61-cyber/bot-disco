@@ -54,11 +54,10 @@ module.exports = (client) => {
   });
 
   // =========================
-  // INTERACTIONS
+  // INTERACTIONS (CLEAN FIX)
   // =========================
   client.on(Events.InteractionCreate, async (interaction) => {
 
-    // רק Button / Modal
     if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
     // =========================
@@ -87,11 +86,8 @@ module.exports = (client) => {
         new ActionRowBuilder().addComponents(reason)
       );
 
-      try {
-        return await interaction.showModal(modal);
-      } catch (err) {
-        console.log("Modal error:", err);
-      }
+      // חשוב: בלי try/catch שמסתיר בעיות
+      return interaction.showModal(modal);
     }
 
     // =========================
