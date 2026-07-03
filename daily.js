@@ -1,111 +1,143 @@
+const fs = require("fs");
 const {
-  Events,
   EmbedBuilder,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
+  Events
 } = require("discord.js");
-
-const fs = require("fs");
 
 module.exports = (client) => {
 
 const FILE = "./data.json";
 
-// =========================
-// DB
-// =========================
+// =====================
+// DB SAFE
+// =====================
 function load() {
-  if (!fs.existsSync(FILE)) return {};
-  return JSON.parse(fs.readFileSync(FILE));
+  try {
+    if (!fs.existsSync(FILE)) return {};
+    const raw = fs.readFileSync(FILE, "utf8");
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    console.log("DB load error:", e);
+    return {};
+  }
 }
 
 function save(data) {
-  fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
+  try {
+    fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
+  } catch (e) {
+    console.log("DB save error:", e);
+  }
 }
 
 function getUser(data, id) {
   if (!data[id]) {
     data[id] = {
-      credits: 0,
-      lastDaily: 0
+      credits: 100,
+      wins: 0,
+      losses: 0
     };
   }
   return data[id];
 }
 
-// =========================
-// MESSAGE COMMAND
-// =========================
+// =====================
+// READY LOG
+// =====================
+client.on("ready", () => {
+  console.log(`✅ Casino Online: ${client.user.tag}`);
+});
+
+// =====================
+// COMMAND
+// =====================
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
-  if (message.content === "!daily") {
+  if (message.content === "!casino") {
 
     const embed = new EmbedBuilder()
-      .setColor("#57F287")
-      .setTitle("💰 Daily Reward")
-      .setDescription("לחץ על הכפתור כדי לקבל 5 credits כל 24 שעות");
+      .setColor("#111111")
+      .setTitle("🎰 ROYAL CASINO")
+      .setDescription("Choose a game");
 
     const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("claim_daily")
-        .setLabel("💰 Claim Daily")
-        .setStyle(ButtonStyle.Success)
+      new ButtonBuilder().setCustomId("coinflip").setLabel("🪙 Coinflip").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId("slots").setLabel("🎰 Slots").setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId("roulette").setLabel("🎡 Roulette").setStyle(ButtonStyle.Danger),
+      new ButtonBuilder().setCustomId("blackjack").setLabel("🃏 Blackjack").setStyle(ButtonStyle.Secondary)
     );
 
-    return message.channel.send({
-      embeds: [embed],
-      components: [row]
-    });
+    return message.channel.send({ embeds: [embed], components: [row] });
   }
 });
 
-// =========================
-// INTERACTIONS (FIXED)
-// =========================
+// =====================
+// INTERACTIONS (FAST + NO DELAY)
+// =====================
 client.on(Events.InteractionCreate, async (interaction) => {
+
+  if (!interaction.isButton()) return;
+
+  const id = interaction.customId;
+
+  console.log(`🎮 Button clicked: ${id} by ${interaction.user.tag}`);
+
   try {
 
-    if (!interaction.isButton()) return;
-    if (interaction.customId !== "claim_daily") return;
-
-    // 🔥 חשוב נגד 10062
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.deferReply({ ephemeral: true }).catch(() => {});
-    }
+    // ⚡ מענה מהיר למניעת 10062
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
     let data = load();
-    let user = getUser(data, interaction.user.id);
+    let u = getUser(data, interaction.user.id);
 
-    const now = Date.now();
-    const cooldown = 24 * 60 * 60 * 1000;
+    let result = "";
 
-    if (now - user.lastDaily < cooldown) {
-      const remaining = cooldown - (now - user.lastDaily);
-      const hours = Math.floor(remaining / 3600000);
-
-      return interaction.editReply(
-        `❌ כבר לקחת daily!\n⏳ נסה שוב בעוד ${hours} שעות`
-      );
+    if (id === "coinflip") {
+      const win = Math.random() > 0.5;
+      u.credits += win ? 10 : -10;
+      win ? u.wins++ : u.losses++;
+      result = win ? "🪙 WIN +10" : "🪙 LOSE -10";
     }
 
-    user.credits += 5;
-    user.lastDaily = now;
+    if (id === "slots") {
+      const win = Math.random() > 0.7;
+      u.credits += win ? 25 : -10;
+      win ? u.wins++ : u.losses++;
+      result = win ? "🎰 JACKPOT +25" : "🎰 LOSE -10";
+    }
+
+    if (id === "roulette") {
+      const win = Math.random() > 0.6;
+      u.credits += win ? 15 : -15;
+      win ? u.wins++ : u.losses++;
+      result = win ? "🎡 WIN +15" : "🎡 LOSE -15";
+    }
+
+    if (id === "blackjack") {
+      const win = Math.random() > 0.55;
+      u.credits += win ? 20 : -20;
+      win ? u.wins++ : u.losses++;
+      result = win ? "🃏 WIN +20" : "🃏 LOSE -20";
+    }
 
     save(data);
 
-    return interaction.editReply(
-      `💰 קיבלת 5 credits!\n💳 עכשיו יש לך: ${user.credits}`
-    );
+    // ⚡ תשובה מהירה
+    return interaction.editReply({
+      content: `${result}\n💳 Balance: ${u.credits}`
+    });
 
   } catch (err) {
-    console.log("Daily error:", err);
+    console.log("❌ Casino error:", err);
 
     try {
       if (!interaction.replied) {
         await interaction.reply({
-          content: "⛔ שגיאה, נסה שוב",
+          content: "❌ Error occurred",
           ephemeral: true
         });
       }
