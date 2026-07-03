@@ -34,8 +34,6 @@ function user(data, id) {
   return data[id];
 }
 
-const games = new Map();
-
 // =====================
 // READY
 // =====================
@@ -73,6 +71,37 @@ client.on("messageCreate", async (message) => {
     );
 
     return message.channel.send({ embeds: [embed], components: [row] });
+  }
+});
+
+// =====================
+// BUTTONS FIX (IMPORTANT)
+// =====================
+client.on("interactionCreate", async (interaction) => {
+  try {
+    if (!interaction.isButton()) return;
+
+    const id = interaction.customId;
+
+    if (interaction.deferred || interaction.replied) return;
+
+    if (id === "coinflip")
+      return interaction.reply({ content: "🪙 Coinflip opened", ephemeral: true });
+
+    if (id === "slots")
+      return interaction.reply({ content: "🎰 Slots opened", ephemeral: true });
+
+    if (id === "roulette")
+      return interaction.reply({ content: "🎡 Roulette opened", ephemeral: true });
+
+    if (id === "crash")
+      return interaction.reply({ content: "💣 Crash opened", ephemeral: true });
+
+    if (id === "blackjack")
+      return interaction.reply({ content: "🃏 Blackjack opened", ephemeral: true });
+
+  } catch (err) {
+    console.log("Casino error:", err);
   }
 });
 
