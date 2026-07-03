@@ -34,6 +34,8 @@ function user(data, id) {
   return data[id];
 }
 
+const games = new Map();
+
 // =====================
 // READY
 // =====================
@@ -75,33 +77,35 @@ client.on("messageCreate", async (message) => {
 });
 
 // =====================
-// BUTTONS FIX (IMPORTANT)
+// FIX INTERACTIONS (IMPORTANT)
 // =====================
 client.on("interactionCreate", async (interaction) => {
   try {
+
     if (!interaction.isButton()) return;
 
     const id = interaction.customId;
 
-    if (interaction.deferred || interaction.replied) return;
+    // 🔥 חשוב: מונע Unknown interaction (10062)
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
-    if (id === "coinflip")
-      return interaction.reply({ content: "🪙 Coinflip opened", ephemeral: true });
-
-    if (id === "slots")
-      return interaction.reply({ content: "🎰 Slots opened", ephemeral: true });
-
-    if (id === "roulette")
-      return interaction.reply({ content: "🎡 Roulette opened", ephemeral: true });
-
-    if (id === "crash")
-      return interaction.reply({ content: "💣 Crash opened", ephemeral: true });
-
-    if (id === "blackjack")
-      return interaction.reply({ content: "🃏 Blackjack opened", ephemeral: true });
+    if (id === "coinflip") return interaction.editReply("🪙 Coinflip coming soon");
+    if (id === "slots") return interaction.editReply("🎰 Slots coming soon");
+    if (id === "roulette") return interaction.editReply("🎡 Roulette coming soon");
+    if (id === "crash") return interaction.editReply("💣 Crash coming soon");
+    if (id === "blackjack") return interaction.editReply("🃏 Blackjack coming soon");
 
   } catch (err) {
     console.log("Casino error:", err);
+
+    try {
+      if (interaction.isRepliable() && !interaction.replied) {
+        await interaction.reply({
+          content: "⛔ שגיאה, נסה שוב",
+          ephemeral: true
+        });
+      }
+    } catch {}
   }
 });
 
