@@ -13,6 +13,8 @@ const {
 
 module.exports = (client) => {
 
+  console.log("ticket.js loaded");
+
   // =========================
   // PANEL COMMAND
   // =========================
@@ -58,6 +60,13 @@ module.exports = (client) => {
   // =========================
   client.on(Events.InteractionCreate, async (interaction) => {
 
+    console.log(
+      "[Ticket]",
+      interaction.customId,
+      interaction.isButton(),
+      interaction.isModalSubmit()
+    );
+
     if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
     // =========================
@@ -86,7 +95,6 @@ module.exports = (client) => {
         new ActionRowBuilder().addComponents(reason)
       );
 
-      // חשוב: בלי try/catch שמסתיר בעיות
       return interaction.showModal(modal);
     }
 
