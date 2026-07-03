@@ -15,6 +15,8 @@ module.exports = (client) => {
 
   console.log("ticket.js loaded");
 
+  let ticketCounter = 0;
+
   // =========================
   // PANEL COMMAND
   // =========================
@@ -56,30 +58,29 @@ module.exports = (client) => {
 
     try {
 
-      // רק כפתורים / מודלים
       if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
-      console.log("[Ticket]", interaction.customId);
-
       // =========================
-      // OPEN MODAL (FIX חשוב)
+      // OPEN MODAL
       // =========================
       if (interaction.isButton() && interaction.customId === "open_ticket") {
 
         const modal = new ModalBuilder()
           .setCustomId("ticket_modal")
-          .setTitle("Ticket Form");
+          .setTitle("🎫 Open Ticket");
 
         const name = new TextInputBuilder()
           .setCustomId("name")
-          .setLabel("מה השם שלך?")
+          .setLabel("מה השם שלך בשרת?")
           .setStyle(TextInputStyle.Short)
+          .setPlaceholder("לדוגמה: Player123")
           .setRequired(true);
 
         const reason = new TextInputBuilder()
           .setCustomId("reason")
-          .setLabel("מה הסיבה?")
+          .setLabel("מה הסיבה לפתיחת הטיקט?")
           .setStyle(TextInputStyle.Paragraph)
+          .setPlaceholder("תסביר למה אתה צריך עזרה")
           .setRequired(true);
 
         modal.addComponents(
@@ -98,8 +99,10 @@ module.exports = (client) => {
         const name = interaction.fields.getTextInputValue("name");
         const reason = interaction.fields.getTextInputValue("reason");
 
+        ticketCounter++;
+
         const channel = await interaction.guild.channels.create({
-          name: `ticket-${interaction.user.id}`,
+          name: `ticket-${ticketCounter}`,
           type: ChannelType.GuildText,
           permissionOverwrites: [
             {
@@ -120,7 +123,11 @@ module.exports = (client) => {
         const embed = new EmbedBuilder()
           .setColor("#2b2d31")
           .setTitle("📩 Ticket Created")
-          .setDescription(`👤 ${name}\n❓ ${reason}`);
+          .setDescription(
+`👤 שם: ${name}
+❓ סיבה: ${reason}
+🆔 יוצר: ${interaction.user.tag}`
+          );
 
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
@@ -151,7 +158,7 @@ module.exports = (client) => {
 
         setTimeout(() => {
           interaction.channel.delete().catch(() => {});
-        }, 2000);
+        }, 1500);
       }
 
     } catch (err) {
