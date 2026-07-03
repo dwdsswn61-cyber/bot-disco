@@ -62,12 +62,18 @@ client.on("messageCreate", async (message) => {
 });
 
 // =========================
-// INTERACTIONS
+// INTERACTIONS (FIXED)
 // =========================
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isButton()) return;
+  try {
 
-  if (interaction.customId === "claim_daily") {
+    if (!interaction.isButton()) return;
+    if (interaction.customId !== "claim_daily") return;
+
+    // 🔥 חשוב נגד 10062
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.deferReply({ ephemeral: true }).catch(() => {});
+    }
 
     let data = load();
     let user = getUser(data, interaction.user.id);
@@ -79,10 +85,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
       const remaining = cooldown - (now - user.lastDaily);
       const hours = Math.floor(remaining / 3600000);
 
-      return interaction.reply({
-        content: `❌ כבר לקחת daily!\n⏳ נסה שוב בעוד ${hours} שעות`,
-        ephemeral: true
-      });
+      return interaction.editReply(
+        `❌ כבר לקחת daily!\n⏳ נסה שוב בעוד ${hours} שעות`
+      );
     }
 
     user.credits += 5;
@@ -90,10 +95,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     save(data);
 
-    return interaction.reply({
-      content: `💰 קיבלת 5 credits!\n💳 עכשיו יש לך: ${user.credits}`,
-      ephemeral: true
-    });
+    return interaction.editReply(
+      `💰 קיבלת 5 credits!\n💳 עכשיו יש לך: ${user.credits}`
+    );
+
+  } catch (err) {
+    console.log("Daily error:", err);
+
+    try {
+      if (!interaction.replied) {
+        await interaction.reply({
+          content: "⛔ שגיאה, נסה שוב",
+          ephemeral: true
+        });
+      }
+    } catch {}
   }
 });
 
