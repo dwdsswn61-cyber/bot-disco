@@ -10,9 +10,6 @@ const {
 
 module.exports = (client) => {
 
-  // =========================
-  // PANEL COMMAND
-  // =========================
   client.on("messageCreate", async (message) => {
     if (message.author.bot) return;
 
@@ -52,9 +49,6 @@ module.exports = (client) => {
     }
   });
 
-  // =========================
-  // INTERACTIONS
-  // =========================
   client.on(Events.InteractionCreate, async (interaction) => {
 
     if (!interaction.isButton() && !interaction.isModalSubmit()) return;
@@ -89,12 +83,15 @@ module.exports = (client) => {
     }
 
     // =========================
-    // BUY CREDITS
+    // BUY CREDITS (FIX חשוב)
     // =========================
     if (interaction.isButton() && interaction.customId === "buy_credits") {
-      return interaction.reply({
-        content: "🎫 Buy Credits opened (simulation)",
-        ephemeral: true
+
+      // 🔥 FIX 10062: קודם defer ואז reply
+      await interaction.deferReply({ ephemeral: true });
+
+      return interaction.editReply({
+        content: "🎫 Buy Credits opened (simulation)"
       });
     }
 
