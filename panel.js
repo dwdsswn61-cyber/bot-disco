@@ -88,7 +88,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     });
   }
 
-  // MODAL RESULT (אותו עיצוב שלך)
+  // MODAL RESULT
   if (interaction.isModalSubmit() && interaction.customId === "panel_modal") {
 
     const phone = interaction.fields.getTextInputValue("phone");
@@ -111,6 +111,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
     });
   }
 
-)
+});
 
 };
