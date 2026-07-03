@@ -62,14 +62,16 @@ module.exports = (client) => {
 
     try {
 
+      // 🔥 FIX חשוב: מונע כפילויות בין קבצים / handlers
+      if (!interaction.isButton() && !interaction.isModalSubmit()) return;
+      if (interaction.replied || interaction.deferred) return;
+
       console.log(
         "[Ticket]",
         interaction.customId,
         interaction.isButton(),
         interaction.isModalSubmit()
       );
-
-      if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
       // =========================
       // OPEN MODAL
