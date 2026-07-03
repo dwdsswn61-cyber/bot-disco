@@ -23,19 +23,19 @@ module.exports = (client) => {
 
       const embed = new EmbedBuilder()
         .setColor("#5865F2")
-        .setTitle("📌 𝗦𝗨𝗣𝗣𝗢𝗥𝗧 𝗣𝗔𝗡𝗘𝗟")
+        .setTitle("📌 SUPPORT PANEL")
         .setDescription(
 `━━━━━━━━━━━━━━━
-❓ צריך עזרה בשרת?
+❓ צריך עזרה?
 
 🚀 לחץ על הכפתור למטה כדי לפתוח טיקט
-👨‍💻 הצוות יעזור לך בהקדם
+👨‍💻 צוות השרת יעזור לך
 
 ━━━━━━━━━━━━━━━
 ⚡ לפני פתיחת טיקט:
-• תכתוב בצורה ברורה
+• תהיה ברור
 • אל תספאם
-• תהיה מנומס
+• תהיה מכבד
 ━━━━━━━━━━━━━━━`
         );
 
@@ -54,28 +54,28 @@ module.exports = (client) => {
   });
 
   // =========================
-  // INTERACTIONS (FIXED ONLY LOGIC)
+  // INTERACTIONS
   // =========================
   client.on(Events.InteractionCreate, async (interaction) => {
 
     try {
 
-      // OPEN MODAL
+      // OPEN MODAL (חייב להיות מיידי)
       if (interaction.isButton() && interaction.customId === "open_ticket") {
 
         const modal = new ModalBuilder()
           .setCustomId("ticket_modal")
-          .setTitle("📨 Ticket Form");
+          .setTitle("Ticket Form");
 
         const name = new TextInputBuilder()
           .setCustomId("name")
-          .setLabel("👤 מה השם שלך בשרת?")
+          .setLabel("מה השם שלך?")
           .setStyle(TextInputStyle.Short)
           .setRequired(true);
 
         const reason = new TextInputBuilder()
           .setCustomId("reason")
-          .setLabel("❓ מה הסיבה לפתיחת הטיקט?")
+          .setLabel("מה הסיבה לפתיחת טיקט?")
           .setStyle(TextInputStyle.Paragraph)
           .setRequired(true);
 
@@ -84,7 +84,7 @@ module.exports = (client) => {
           new ActionRowBuilder().addComponents(reason)
         );
 
-        return await interaction.showModal(modal);
+        return interaction.showModal(modal);
       }
 
       // CREATE TICKET
@@ -94,7 +94,7 @@ module.exports = (client) => {
         const reason = interaction.fields.getTextInputValue("reason");
 
         const channel = await interaction.guild.channels.create({
-          name: `ticket-${interaction.user.username}`,
+          name: `ticket-${interaction.user.id}`,
           type: ChannelType.GuildText,
           permissionOverwrites: [
             {
@@ -118,9 +118,8 @@ module.exports = (client) => {
           .setDescription(
 `👤 שם: ${name}
 ❓ סיבה: ${reason}
-👤 יוצר: ${interaction.user}`
-          )
-          .setTimestamp();
+👤 משתמש: ${interaction.user.tag}`
+          );
 
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder()
@@ -149,11 +148,11 @@ module.exports = (client) => {
 
         setTimeout(() => {
           interaction.channel.delete().catch(() => {});
-        }, 2500);
+        }, 2000);
       }
 
     } catch (err) {
-      console.log("Interaction error:", err);
+      console.log("Ticket error:", err);
     }
 
   });
