@@ -45,7 +45,7 @@ function getUser(data, id) {
 }
 
 // =====================
-// READY LOG
+// READY
 // =====================
 client.on("ready", () => {
   console.log(`✅ Casino Online: ${client.user.tag}`);
@@ -76,7 +76,7 @@ client.on("messageCreate", async (message) => {
 });
 
 // =====================
-// INTERACTIONS (FAST + NO DELAY)
+// INTERACTIONS FIXED
 // =====================
 client.on(Events.InteractionCreate, async (interaction) => {
 
@@ -87,9 +87,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
   console.log(`🎮 Button clicked: ${id} by ${interaction.user.tag}`);
 
   try {
-
-    // ⚡ מענה מהיר למניעת 10062
-    await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
     let data = load();
     let u = getUser(data, interaction.user.id);
@@ -126,7 +123,11 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     save(data);
 
-    // ⚡ תשובה מהירה
+    // ✅ FIX אמיתי ל־InteractionNotReplied
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.deferReply({ ephemeral: true });
+    }
+
     return interaction.editReply({
       content: `${result}\n💳 Balance: ${u.credits}`
     });
@@ -135,7 +136,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     console.log("❌ Casino error:", err);
 
     try {
-      if (!interaction.replied) {
+      if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
           content: "❌ Error occurred",
           ephemeral: true
