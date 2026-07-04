@@ -85,17 +85,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   try {
 
-    // 🔥 חובה: מונע 10062
-    await interaction.deferReply({ ephemeral: true });
-
     const id = interaction.customId;
 
     let data = load();
     let u = getUser(data, interaction.user.id);
 
-    // =====================
-    // GAMES (SIMULATION)
-    // =====================
+    let result = "";
 
     if (id === "coinflip") {
       const win = Math.random() > 0.5;
@@ -104,12 +99,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
         u.credits += 10;
         u.wins++;
         save(data);
-        return interaction.editReply("🪙 You WON +10 credits");
+        result = "🪙 You WON +10 credits";
       } else {
         u.credits -= 10;
         u.losses++;
         save(data);
-        return interaction.editReply("🪙 You LOST -10 credits");
+        result = "🪙 You LOST -10 credits";
       }
     }
 
@@ -120,12 +115,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
         u.credits += 25;
         u.wins++;
         save(data);
-        return interaction.editReply("🎰 JACKPOT +25 credits");
+        result = "🎰 JACKPOT +25 credits";
       } else {
         u.credits -= 10;
         u.losses++;
         save(data);
-        return interaction.editReply("🎰 Lost -10 credits");
+        result = "🎰 Lost -10 credits";
       }
     }
 
@@ -136,12 +131,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
         u.credits += 15;
         u.wins++;
         save(data);
-        return interaction.editReply("🎡 You WON +15 credits");
+        result = "🎡 You WON +15 credits";
       } else {
         u.credits -= 15;
         u.losses++;
         save(data);
-        return interaction.editReply("🎡 You LOST -15 credits");
+        result = "🎡 You LOST -15 credits";
       }
     }
 
@@ -152,21 +147,29 @@ client.on(Events.InteractionCreate, async (interaction) => {
         u.credits += 20;
         u.wins++;
         save(data);
-        return interaction.editReply("🃏 Blackjack WIN +20");
+        result = "🃏 Blackjack WIN +20";
       } else {
         u.credits -= 20;
         u.losses++;
         save(data);
-        return interaction.editReply("🃏 Blackjack LOST -20");
+        result = "🃏 Blackjack LOST -20";
       }
     }
+
+    save(data);
+
+    // 🔥 שינוי קריטי בלבד (בלי deferReply)
+    return interaction.reply({
+      content: `${result}\n💳 Balance: ${u.credits}`,
+      ephemeral: true
+    });
 
   } catch (err) {
     console.log("Casino error:", err);
 
     try {
       if (!interaction.replied) {
-        await interaction.reply({
+        return interaction.reply({
           content: "⛔ Error occurred",
           ephemeral: true
         });
