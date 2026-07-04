@@ -1,90 +1,7 @@
-const fs = require("fs");
-const {
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  Events
-} = require("discord.js");
-
-module.exports = (client) => {
-
-const FILE = "./data.json";
-
-// =====================
-// DB SAFE
-// =====================
-function load() {
-  try {
-    if (!fs.existsSync(FILE)) return {};
-    return JSON.parse(fs.readFileSync(FILE));
-  } catch {
-    return {};
-  }
-}
-
-function save(data) {
-  fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
-}
-
-function getUser(data, id) {
-  if (!data[id]) {
-    data[id] = {
-      credits: 100,
-      wins: 0,
-      losses: 0,
-      lastDaily: 0
-    };
-  }
-  return data[id];
-}
-
-// =====================
-// READY
-// =====================
-client.on("ready", () => {
-  console.log(`Casino Online: ${client.user.tag}`);
-});
-
-// =====================
-// COMMANDS
-// =====================
-client.on("messageCreate", async (message) => {
-  if (message.author.bot) return;
-
-  if (message.content === "!balance") {
-    const data = load();
-    const u = getUser(data, message.author.id);
-    return message.reply(`💳 Balance: ${u.credits}`);
-  }
-
-  if (message.content === "!casino") {
-
-    const embed = new EmbedBuilder()
-      .setColor("#111111")
-      .setTitle("🎰 ROYAL CASINO")
-      .setDescription("Choose a game below");
-
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("coinflip").setLabel("🪙 Coinflip").setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId("slots").setLabel("🎰 Slots").setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId("roulette").setLabel("🎡 Roulette").setStyle(ButtonStyle.Danger),
-      new ButtonBuilder().setCustomId("blackjack").setLabel("🃏 Blackjack").setStyle(ButtonStyle.Secondary)
-    );
-
-    return message.channel.send({ embeds: [embed], components: [row] });
-  }
-});
-
-// =====================
-// INTERACTIONS SAFE FIXED
-// =====================
 client.on(Events.InteractionCreate, async (interaction) => {
-
   if (!interaction.isButton()) return;
 
   try {
-
     const id = interaction.customId;
 
     let data = load();
@@ -122,13 +39,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     save(data);
 
-    // =====================
-    // SAFE REPLY FIX (10062 FIX)
-    // =====================
-    if (interaction.replied || interaction.deferred) {
-      return interaction.followUp({
-        content: `${result}\n💳 Balance: ${u.credits}`,
-        ephemeral: true
+    // 🔥 הכי חשוב: תשובה אחת בלבד, עם TRY SAFE
+    if (interaction.deferred) {
+      return interaction.editReply({
+        content: `${result}\n💳 Balance: ${u.credits}`
       });
     }
 
@@ -150,5 +64,3 @@ client.on(Events.InteractionCreate, async (interaction) => {
     } catch {}
   }
 });
-
-};
