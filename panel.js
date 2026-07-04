@@ -56,12 +56,9 @@ module.exports = (client) => {
       if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
       // =========================
-      // PANEL OPEN (FIX 10062)
+      // PANEL OPEN (FIXED)
       // =========================
       if (interaction.isButton() && interaction.customId === "panel_open") {
-
-        // 🔥 FIX חשוב: מונע timeout
-        await interaction.deferUpdate();
 
         const modal = new ModalBuilder()
           .setCustomId("panel_modal")
@@ -88,14 +85,13 @@ module.exports = (client) => {
       }
 
       // =========================
-      // BUY CREDITS (FIX יציב)
+      // BUY CREDITS
       // =========================
       if (interaction.isButton() && interaction.customId === "buy_credits") {
 
-        await interaction.deferReply({ ephemeral: true });
-
-        return interaction.editReply({
-          content: "🎫 Buy Credits opened (simulation)"
+        return interaction.reply({
+          content: "🎫 Buy Credits opened (simulation)",
+          ephemeral: true
         });
       }
 
