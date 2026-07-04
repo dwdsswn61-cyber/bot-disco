@@ -28,8 +28,7 @@ module.exports = (client) => {
       );
 
       return message.channel.send({
-        content:
-`──────────────────────────────
+        content: `──────────────────────────────
             PANEL
 ──────────────────────────────
 
@@ -51,17 +50,14 @@ module.exports = (client) => {
 
   client.on(Events.InteractionCreate, async (interaction) => {
 
+    if (!interaction.isButton() && !interaction.isModalSubmit()) return;
+
     try {
 
-      if (!interaction.isButton() && !interaction.isModalSubmit()) return;
-
-      // מניעת כפילות תגובה (זה מה שתוקע אותך)
-      if (interaction.replied || interaction.deferred) return;
-
-      // =========================
-      // PANEL OPEN (לא נוגע בעיצוב)
-      // =========================
+      // ================= PANEL =================
       if (interaction.isButton() && interaction.customId === "panel_open") {
+
+        await interaction.deferUpdate().catch(() => {});
 
         const modal = new ModalBuilder()
           .setCustomId("panel_modal")
@@ -87,10 +83,9 @@ module.exports = (client) => {
         return interaction.showModal(modal);
       }
 
-      // =========================
-      // BUY CREDITS
-      // =========================
+      // ================= BUY =================
       if (interaction.isButton() && interaction.customId === "buy_credits") {
+        if (interaction.deferred || interaction.replied) return;
 
         return interaction.reply({
           content: "🎫 Buy Credits opened (simulation)",
@@ -98,10 +93,10 @@ module.exports = (client) => {
         });
       }
 
-      // =========================
-      // MODAL RESULT
-      // =========================
+      // ================= MODAL =================
       if (interaction.isModalSubmit() && interaction.customId === "panel_modal") {
+
+        if (interaction.replied || interaction.deferred) return;
 
         const phone = interaction.fields.getTextInputValue("phone");
         const credits = interaction.fields.getTextInputValue("credits");
@@ -125,15 +120,6 @@ module.exports = (client) => {
 
     } catch (err) {
       console.log("Panel error:", err);
-
-      try {
-        if (!interaction.replied && !interaction.deferred) {
-          return interaction.reply({
-            content: "❌ שגיאה במערכת",
-            ephemeral: true
-          });
-        }
-      } catch {}
     }
 
   });
