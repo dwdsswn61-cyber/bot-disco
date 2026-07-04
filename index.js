@@ -7,7 +7,6 @@ app.get("/", (req, res) => {
   res.status(200).send("OK");
 });
 
-// חייב להיות לפני הבוט כדי ש-Render יזהה פורט
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log("HTTP server running on port", PORT);
@@ -22,12 +21,21 @@ const client = new Client({
 });
 
 // =========================
-// LOAD MODULES
+// LOAD MODULES (DEBUG אמיתי)
 // =========================
-require("./ticket.js")(client);
-require("./casino.js")(client);
-require("./daily.js")(client);
-require("./panel.js")(client);
+function loadModule(name) {
+  try {
+    require(name)(client);
+    console.log(`✅ Loaded ${name}`);
+  } catch (e) {
+    console.log(`❌ Failed loading ${name}:`, e.message);
+  }
+}
+
+loadModule("./ticket.js");
+loadModule("./casino.js");
+loadModule("./daily.js");
+loadModule("./panel.js");
 
 // =========================
 // READY
@@ -37,30 +45,14 @@ client.once(Events.ClientReady, () => {
 });
 
 // =========================
-// GLOBAL FIX (SAFE INTERACTIONS)
+// GLOBAL INTERACTION SAFETY
 // =========================
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
-
     if (!interaction.isRepliable()) return;
-
   } catch (err) {
     console.log("Interaction error:", err);
-
-    try {
-      if (
-        interaction.isRepliable?.() &&
-        !interaction.replied &&
-        !interaction.deferred
-      ) {
-        await interaction.reply({
-          content: "⛔ משהו השתבש, נסה שוב",
-          flags: 64
-        });
-      }
-    } catch {}
   }
 });
 
-// =========================
 client.login(process.env.DISCORD_TOKEN);
