@@ -123,25 +123,20 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     save(data);
 
-    // ✅ FIX אמיתי ל־InteractionNotReplied
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.deferReply({ ephemeral: true });
-    }
-
-    return interaction.editReply({
-      content: `${result}\n💳 Balance: ${u.credits}`
+    // ✅ FIX אמיתי ויציב
+    return interaction.reply({
+      content: `${result}\n💳 Balance: ${u.credits}`,
+      ephemeral: true
     });
 
   } catch (err) {
     console.log("❌ Casino error:", err);
 
     try {
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({
-          content: "❌ Error occurred",
-          ephemeral: true
-        });
-      }
+      return interaction.reply({
+        content: "❌ Error occurred",
+        ephemeral: true
+      });
     } catch {}
   }
 });
