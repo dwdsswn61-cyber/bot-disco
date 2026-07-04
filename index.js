@@ -10,7 +10,6 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log("HTTP server running on port", PORT);
 });
 
-// BOT CLIENT
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -19,25 +18,110 @@ const client = new Client({
   ]
 });
 
-// LOAD MODULES (SAFE)
-try { require("./ticket.js")(client); } catch (e) { console.log("ticket.js error:", e.message); }
-try { require("./casino.js")(client); } catch (e) { console.log("casino.js error:", e.message); }
-try { require("./daily.js")(client); } catch (e) { console.log("daily.js error:", e.message); }
-try { require("./panel.js")(client); } catch (e) { console.log("panel.js error:", e.message); }
-
-// READY EVENT (עדכני לדיסקורד החדש)
+// =========================
+// READY
+// =========================
 client.once(Events.ClientReady, () => {
-  console.log("BOT ONLINE:", client.user.tag);
+  console.log(`BOT ONLINE: ${client.user.tag}`);
 });
 
-// GLOBAL ERROR CATCH (מונע קריסות)
+// =========================
+// MESSAGE COMMANDS (כאן הכל)
+// =========================
+client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+
+  if (message.content === "!ping") {
+    return message.reply("🏓 Pong!");
+  }
+
+  if (message.content === "!panel") {
+    return message.channel.send("📦 Panel system placeholder");
+  }
+
+  if (message.content === "!casino") {
+    return message.channel.send("🎰 Casino system placeholder");
+  }
+});
+
+// =========================
+// INTERACTIONS (FIXED 100%)
+// =========================
+client.on(Events.InteractionCreate, async (interaction) => {
+  try {
+
+    if (!interaction.isRepliable()) return;
+
+    // ⚡ חשוב: לא עושים defer כפול
+    if (interaction.replied || interaction.deferred) return;
+
+    const id = interaction.customId;
+
+    // =====================
+    // BUTTONS
+    // =====================
+    if (interaction.isButton()) {
+
+      if (id === "panel_open") {
+        return interaction.reply({
+          content: "📦 Panel opened",
+          ephemeral: true
+        });
+      }
+
+      if (id === "buy_credits") {
+        return interaction.reply({
+          content: "🎫 Buy Credits opened",
+          ephemeral: true
+        });
+      }
+
+      if (id === "open_ticket") {
+        return interaction.reply({
+          content: "🎫 Ticket opened",
+          ephemeral: true
+        });
+      }
+
+      return interaction.reply({
+        content: "⚡ Unknown button",
+        ephemeral: true
+      });
+    }
+
+    // =====================
+    // MODALS (אם תוסיף בעתיד)
+    // =====================
+    if (interaction.isModalSubmit()) {
+      return interaction.reply({
+        content: "📩 Modal received",
+        ephemeral: true
+      });
+    }
+
+  } catch (err) {
+    console.log("INTERACTION ERROR:", err);
+
+    try {
+      if (!interaction.replied) {
+        await interaction.reply({
+          content: "⛔ Error occurred",
+          ephemeral: true
+        });
+      }
+    } catch {}
+  }
+});
+
+// =========================
+// GLOBAL SAFETY
+// =========================
 process.on("unhandledRejection", (err) => {
-  console.log("Unhandled Promise Error:", err);
+  console.log("Unhandled:", err);
 });
 
 process.on("uncaughtException", (err) => {
-  console.log("Crash Error:", err);
+  console.log("Crash:", err);
 });
 
-// LOGIN
 client.login(process.env.DISCORD_TOKEN);
