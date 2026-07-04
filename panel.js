@@ -55,12 +55,13 @@ module.exports = (client) => {
 
       if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
-      const id = interaction.customId;
+      // מניעת כפילות תגובה (זה מה שתוקע אותך)
+      if (interaction.replied || interaction.deferred) return;
 
       // =========================
-      // PANEL OPEN
+      // PANEL OPEN (לא נוגע בעיצוב)
       // =========================
-      if (interaction.isButton() && id === "panel_open") {
+      if (interaction.isButton() && interaction.customId === "panel_open") {
 
         const modal = new ModalBuilder()
           .setCustomId("panel_modal")
@@ -83,17 +84,13 @@ module.exports = (client) => {
           new ActionRowBuilder().addComponents(credits)
         );
 
-        if (!interaction.replied && !interaction.deferred) {
-          return interaction.showModal(modal);
-        }
+        return interaction.showModal(modal);
       }
 
       // =========================
       // BUY CREDITS
       // =========================
-      if (interaction.isButton() && id === "buy_credits") {
-
-        if (interaction.replied || interaction.deferred) return;
+      if (interaction.isButton() && interaction.customId === "buy_credits") {
 
         return interaction.reply({
           content: "🎫 Buy Credits opened (simulation)",
@@ -104,7 +101,7 @@ module.exports = (client) => {
       // =========================
       // MODAL RESULT
       // =========================
-      if (interaction.isModalSubmit() && id === "panel_modal") {
+      if (interaction.isModalSubmit() && interaction.customId === "panel_modal") {
 
         const phone = interaction.fields.getTextInputValue("phone");
         const credits = interaction.fields.getTextInputValue("credits");
@@ -130,8 +127,6 @@ module.exports = (client) => {
       console.log("Panel error:", err);
 
       try {
-        if (!interaction.isRepliable()) return;
-
         if (!interaction.replied && !interaction.deferred) {
           return interaction.reply({
             content: "❌ שגיאה במערכת",
