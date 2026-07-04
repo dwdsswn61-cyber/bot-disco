@@ -58,10 +58,11 @@ module.exports = (client) => {
   // =========================
   client.on(Events.InteractionCreate, async (interaction) => {
 
+    // רק Button / Modal
     if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
     // =========================
-    // OPEN MODAL (FIXED)
+    // OPEN MODAL (FIX 10062)
     // =========================
     if (interaction.isButton() && interaction.customId === "open_ticket") {
 
@@ -87,9 +88,6 @@ module.exports = (client) => {
       );
 
       try {
-        // 🔥 FIX חשוב למניעת interaction failed
-        await interaction.deferUpdate().catch(() => {});
-
         return await interaction.showModal(modal);
       } catch (err) {
         console.log("Modal error:", err);
