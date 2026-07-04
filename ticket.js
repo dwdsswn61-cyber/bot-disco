@@ -13,10 +13,6 @@ const {
 
 module.exports = (client) => {
 
-  console.log("ticket.js loaded");
-
-  let ticketCounter = 0;
-
   // =========================
   // PANEL COMMAND
   // =========================
@@ -34,6 +30,12 @@ module.exports = (client) => {
 
 🚀 לחץ על הכפתור למטה כדי לפתוח טיקט
 👨‍💻 צוות השרת יעזור לך
+
+━━━━━━━━━━━━━━━
+⚡ לפני פתיחת טיקט:
+• תהיה ברור
+• אל תספאם
+• תהיה מכבד
 ━━━━━━━━━━━━━━━`
         );
 
@@ -56,122 +58,110 @@ module.exports = (client) => {
   // =========================
   client.on(Events.InteractionCreate, async (interaction) => {
 
-    try {
+    if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
-      if (!interaction.isButton() && !interaction.isModalSubmit()) return;
+    // =========================
+    // OPEN MODAL (FIXED)
+    // =========================
+    if (interaction.isButton() && interaction.customId === "open_ticket") {
 
-      // =========================
-      // OPEN MODAL
-      // =========================
-      if (interaction.isButton() && interaction.customId === "open_ticket") {
+      const modal = new ModalBuilder()
+        .setCustomId("ticket_modal")
+        .setTitle("Ticket Form");
 
-        const modal = new ModalBuilder()
-          .setCustomId("ticket_modal")
-          .setTitle("🎫 Open Ticket");
+      const name = new TextInputBuilder()
+        .setCustomId("name")
+        .setLabel("מה השם שלך?")
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true);
 
-        const name = new TextInputBuilder()
-          .setCustomId("name")
-          .setLabel("מה השם שלך בשרת?")
-          .setStyle(TextInputStyle.Short)
-          .setPlaceholder("לדוגמה: Player123")
-          .setRequired(true);
+      const reason = new TextInputBuilder()
+        .setCustomId("reason")
+        .setLabel("מה הסיבה לפתיחת טיקט?")
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true);
 
-        const reason = new TextInputBuilder()
-          .setCustomId("reason")
-          .setLabel("מה הסיבה לפתיחת הטיקט?")
-          .setStyle(TextInputStyle.Paragraph)
-          .setPlaceholder("תסביר למה אתה צריך עזרה")
-          .setRequired(true);
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(name),
+        new ActionRowBuilder().addComponents(reason)
+      );
 
-        modal.addComponents(
-          new ActionRowBuilder().addComponents(name),
-          new ActionRowBuilder().addComponents(reason)
-        );
+      try {
+        // 🔥 FIX חשוב למניעת interaction failed
+        await interaction.deferUpdate().catch(() => {});
 
-        return interaction.showModal(modal);
+        return await interaction.showModal(modal);
+      } catch (err) {
+        console.log("Modal error:", err);
       }
+    }
 
-      // =========================
-      // CREATE TICKET
-      // =========================
-      if (interaction.isModalSubmit() && interaction.customId === "ticket_modal") {
+    // =========================
+    // CREATE TICKET
+    // =========================
+    if (interaction.isModalSubmit() && interaction.customId === "ticket_modal") {
 
-        const name = interaction.fields.getTextInputValue("name");
-        const reason = interaction.fields.getTextInputValue("reason");
+      const name = interaction.fields.getTextInputValue("name");
+      const reason = interaction.fields.getTextInputValue("reason");
 
-        ticketCounter++;
+      const channel = await interaction.guild.channels.create({
+        name: `ticket-${interaction.user.id}`,
+        type: ChannelType.GuildText,
+        permissionOverwrites: [
+          {
+            id: interaction.guild.id,
+            deny: [PermissionsBitField.Flags.ViewChannel]
+          },
+          {
+            id: interaction.user.id,
+            allow: [
+              PermissionsBitField.Flags.ViewChannel,
+              PermissionsBitField.Flags.SendMessages,
+              PermissionsBitField.Flags.ReadMessageHistory
+            ]
+          }
+        ]
+      });
 
-        const channel = await interaction.guild.channels.create({
-          name: `ticket-${ticketCounter}`,
-          type: ChannelType.GuildText,
-          permissionOverwrites: [
-            {
-              id: interaction.guild.id,
-              deny: [PermissionsBitField.Flags.ViewChannel]
-            },
-            {
-              id: interaction.user.id,
-              allow: [
-                PermissionsBitField.Flags.ViewChannel,
-                PermissionsBitField.Flags.SendMessages,
-                PermissionsBitField.Flags.ReadMessageHistory
-              ]
-            }
-          ]
-        });
-
-        const embed = new EmbedBuilder()
-          .setColor("#2b2d31")
-          .setTitle("📩 Ticket Created")
-          .setDescription(
+      const embed = new EmbedBuilder()
+        .setColor("#2b2d31")
+        .setTitle("📩 Ticket Created")
+        .setDescription(
 `👤 שם: ${name}
 ❓ סיבה: ${reason}
-🆔 יוצר: ${interaction.user.tag}`
-          );
-
-        const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId("close_ticket")
-            .setLabel("🔒 Close Ticket")
-            .setStyle(ButtonStyle.Danger)
+👤 משתמש: ${interaction.user.tag}`
         );
 
-        await channel.send({
-          embeds: [embed],
-          components: [row]
-        });
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("close_ticket")
+          .setLabel("🔒 Close Ticket")
+          .setStyle(ButtonStyle.Danger)
+      );
 
-        return interaction.reply({
-          content: `✔️ נפתח טיקט: ${channel}`,
-          ephemeral: true
-        });
-      }
+      await channel.send({
+        embeds: [embed],
+        components: [row]
+      });
 
-      // =========================
-      // CLOSE TICKET
-      // =========================
-      if (interaction.isButton() && interaction.customId === "close_ticket") {
+      return interaction.reply({
+        content: `✔️ הטיקט נפתח: ${channel}`,
+        ephemeral: true
+      });
+    }
 
-        await interaction.reply({
-          content: "🔒 סוגר טיקט..."
-        });
+    // =========================
+    // CLOSE TICKET
+    // =========================
+    if (interaction.isButton() && interaction.customId === "close_ticket") {
 
-        setTimeout(() => {
-          interaction.channel.delete().catch(() => {});
-        }, 1500);
-      }
+      await interaction.reply({
+        content: "🔒 סוגר טיקט..."
+      });
 
-    } catch (err) {
-      console.log("Ticket error:", err);
-
-      if (!interaction.replied && !interaction.deferred) {
-        try {
-          await interaction.reply({
-            content: "❌ שגיאה בטיקט",
-            ephemeral: true
-          });
-        } catch {}
-      }
+      setTimeout(() => {
+        interaction.channel.delete().catch(() => {});
+      }, 2000);
     }
 
   });
