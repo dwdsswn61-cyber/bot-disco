@@ -51,12 +51,12 @@ module.exports = (client) => {
 
   client.on(Events.InteractionCreate, async (interaction) => {
 
+    if (!interaction.isButton() && !interaction.isModalSubmit()) return;
+
     try {
 
-      if (!interaction.isButton() && !interaction.isModalSubmit()) return;
-
       // =========================
-      // PANEL OPEN (FIXED)
+      // PANEL OPEN (FIXED 10062 SAFE)
       // =========================
       if (interaction.isButton() && interaction.customId === "panel_open") {
 
@@ -81,7 +81,7 @@ module.exports = (client) => {
           new ActionRowBuilder().addComponents(credits)
         );
 
-        return interaction.showModal(modal);
+        return await interaction.showModal(modal);
       }
 
       // =========================
@@ -123,14 +123,14 @@ module.exports = (client) => {
     } catch (err) {
       console.log("Panel error:", err);
 
-      if (!interaction.replied && !interaction.deferred) {
-        try {
-          await interaction.reply({
+      try {
+        if (!interaction.replied && !interaction.deferred) {
+          return interaction.reply({
             content: "❌ שגיאה במערכת",
             ephemeral: true
           });
-        } catch {}
-      }
+        }
+      } catch {}
     }
 
   });
