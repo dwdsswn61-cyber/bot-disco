@@ -77,7 +77,7 @@ client.on("messageCreate", async (message) => {
 });
 
 // =====================
-// INTERACTIONS SAFE
+// INTERACTIONS SAFE FIXED
 // =====================
 client.on(Events.InteractionCreate, async (interaction) => {
 
@@ -94,71 +94,44 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     if (id === "coinflip") {
       const win = Math.random() > 0.5;
-
-      if (win) {
-        u.credits += 10;
-        u.wins++;
-        save(data);
-        result = "🪙 You WON +10 credits";
-      } else {
-        u.credits -= 10;
-        u.losses++;
-        save(data);
-        result = "🪙 You LOST -10 credits";
-      }
+      u.credits += win ? 10 : -10;
+      win ? u.wins++ : u.losses++;
+      result = win ? "🪙 You WON +10 credits" : "🪙 You LOST -10 credits";
     }
 
     if (id === "slots") {
       const win = Math.random() > 0.7;
-
-      if (win) {
-        u.credits += 25;
-        u.wins++;
-        save(data);
-        result = "🎰 JACKPOT +25 credits";
-      } else {
-        u.credits -= 10;
-        u.losses++;
-        save(data);
-        result = "🎰 Lost -10 credits";
-      }
+      u.credits += win ? 25 : -10;
+      win ? u.wins++ : u.losses++;
+      result = win ? "🎰 JACKPOT +25 credits" : "🎰 Lost -10 credits";
     }
 
     if (id === "roulette") {
       const win = Math.random() > 0.6;
-
-      if (win) {
-        u.credits += 15;
-        u.wins++;
-        save(data);
-        result = "🎡 You WON +15 credits";
-      } else {
-        u.credits -= 15;
-        u.losses++;
-        save(data);
-        result = "🎡 You LOST -15 credits";
-      }
+      u.credits += win ? 15 : -15;
+      win ? u.wins++ : u.losses++;
+      result = win ? "🎡 You WON +15 credits" : "🎡 You LOST -15 credits";
     }
 
     if (id === "blackjack") {
       const win = Math.random() > 0.55;
-
-      if (win) {
-        u.credits += 20;
-        u.wins++;
-        save(data);
-        result = "🃏 Blackjack WIN +20";
-      } else {
-        u.credits -= 20;
-        u.losses++;
-        save(data);
-        result = "🃏 Blackjack LOST -20";
-      }
+      u.credits += win ? 20 : -20;
+      win ? u.wins++ : u.losses++;
+      result = win ? "🃏 Blackjack WIN +20" : "🃏 Blackjack LOST -20";
     }
 
     save(data);
 
-    // 🔥 שינוי קריטי בלבד (בלי deferReply)
+    // =====================
+    // SAFE REPLY FIX (10062 FIX)
+    // =====================
+    if (interaction.replied || interaction.deferred) {
+      return interaction.followUp({
+        content: `${result}\n💳 Balance: ${u.credits}`,
+        ephemeral: true
+      });
+    }
+
     return interaction.reply({
       content: `${result}\n💳 Balance: ${u.credits}`,
       ephemeral: true
@@ -168,12 +141,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
     console.log("Casino error:", err);
 
     try {
-      if (!interaction.replied) {
-        return interaction.reply({
-          content: "⛔ Error occurred",
-          ephemeral: true
-        });
-      }
+      if (interaction.replied || interaction.deferred) return;
+
+      return interaction.reply({
+        content: "⛔ Error occurred",
+        ephemeral: true
+      });
     } catch {}
   }
 });
