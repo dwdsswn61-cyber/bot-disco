@@ -1,7 +1,7 @@
 {
-  "name": "discord.bot",
+  "name": "discord-bot",
   "version": "1.0.0",
-  "description": "Discord bot",
+  "description": "Clean Discord Bot (Casino + Ticket + Panel + Daily)",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
