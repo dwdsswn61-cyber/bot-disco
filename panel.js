@@ -51,14 +51,16 @@ module.exports = (client) => {
 
   client.on(Events.InteractionCreate, async (interaction) => {
 
-    if (!interaction.isButton() && !interaction.isModalSubmit()) return;
-
     try {
 
+      if (!interaction.isButton() && !interaction.isModalSubmit()) return;
+
+      const id = interaction.customId;
+
       // =========================
-      // PANEL OPEN (FIXED 10062 SAFE)
+      // PANEL OPEN
       // =========================
-      if (interaction.isButton() && interaction.customId === "panel_open") {
+      if (interaction.isButton() && id === "panel_open") {
 
         const modal = new ModalBuilder()
           .setCustomId("panel_modal")
@@ -81,13 +83,17 @@ module.exports = (client) => {
           new ActionRowBuilder().addComponents(credits)
         );
 
-        return await interaction.showModal(modal);
+        if (!interaction.replied && !interaction.deferred) {
+          return interaction.showModal(modal);
+        }
       }
 
       // =========================
       // BUY CREDITS
       // =========================
-      if (interaction.isButton() && interaction.customId === "buy_credits") {
+      if (interaction.isButton() && id === "buy_credits") {
+
+        if (interaction.replied || interaction.deferred) return;
 
         return interaction.reply({
           content: "🎫 Buy Credits opened (simulation)",
@@ -98,7 +104,7 @@ module.exports = (client) => {
       // =========================
       // MODAL RESULT
       // =========================
-      if (interaction.isModalSubmit() && interaction.customId === "panel_modal") {
+      if (interaction.isModalSubmit() && id === "panel_modal") {
 
         const phone = interaction.fields.getTextInputValue("phone");
         const credits = interaction.fields.getTextInputValue("credits");
@@ -124,6 +130,8 @@ module.exports = (client) => {
       console.log("Panel error:", err);
 
       try {
+        if (!interaction.isRepliable()) return;
+
         if (!interaction.replied && !interaction.deferred) {
           return interaction.reply({
             content: "❌ שגיאה במערכת",
