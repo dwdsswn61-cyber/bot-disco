@@ -47,7 +47,7 @@ function getUser(data, id) {
 // =====================
 // READY
 // =====================
-client.on("ready", () => {
+client.once(Events.ClientReady, () => {
   console.log(`✅ Casino Online: ${client.user.tag}`);
 });
 
@@ -76,17 +76,15 @@ client.on("messageCreate", async (message) => {
 });
 
 // =====================
-// INTERACTIONS FIXED
+// INTERACTIONS SAFE FIX
 // =====================
 client.on(Events.InteractionCreate, async (interaction) => {
 
   if (!interaction.isButton()) return;
 
-  const id = interaction.customId;
-
-  console.log(`🎮 Button clicked: ${id} by ${interaction.user.tag}`);
-
   try {
+
+    const id = interaction.customId;
 
     let data = load();
     let u = getUser(data, interaction.user.id);
@@ -123,7 +121,16 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     save(data);
 
-    // ✅ FIX אמיתי ויציב
+    // =====================
+    // SAFE REPLY (מונע 10062)
+    // =====================
+    if (interaction.replied || interaction.deferred) {
+      return interaction.followUp({
+        content: `${result}\n💳 Balance: ${u.credits}`,
+        ephemeral: true
+      });
+    }
+
     return interaction.reply({
       content: `${result}\n💳 Balance: ${u.credits}`,
       ephemeral: true
@@ -133,10 +140,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
     console.log("❌ Casino error:", err);
 
     try {
-      return interaction.reply({
-        content: "❌ Error occurred",
-        ephemeral: true
-      });
+      if (!interaction.replied && !interaction.deferred) {
+        return interaction.reply({
+          content: "❌ Error occurred",
+          ephemeral: true
+        });
+      }
     } catch {}
   }
 });
