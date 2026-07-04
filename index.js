@@ -2,39 +2,60 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
   try {
-    if (interaction.deferred || interaction.replied) return;
-
-    await interaction.deferReply({ ephemeral: true });
-
-    // כפתורים
     const id = interaction.customId;
 
-    // PANEL
-    if (id === "panel_open") {
-      return interaction.editReply("📦 Panel opened");
+    // =========================
+    // PANEL / BUTTONS / TICKET
+    // =========================
+    if (interaction.isButton()) {
+
+      if (id === "panel_open") {
+        return interaction.reply({
+          content: "📦 Panel opened",
+          ephemeral: true
+        });
+      }
+
+      if (id === "buy_credits") {
+        return interaction.reply({
+          content: "🎫 Buy system opened",
+          ephemeral: true
+        });
+      }
+
+      if (id === "open_ticket") {
+        return interaction.reply({
+          content: "🎫 Ticket opened",
+          ephemeral: true
+        });
+      }
+
+      return interaction.reply({
+        content: "⚡ פעולה בוצעה",
+        ephemeral: true
+      });
     }
 
-    if (id === "buy_credits") {
-      return interaction.editReply("🎫 Buy system opened");
+    // =========================
+    // MODAL HANDLING (אם יש לך בעתיד)
+    // =========================
+    if (interaction.isModalSubmit()) {
+      return interaction.reply({
+        content: "📨 נתונים התקבלו",
+        ephemeral: true
+      });
     }
-
-    if (id === "open_ticket") {
-      return interaction.editReply("🎫 Ticket opened");
-    }
-
-    // CASINO fallback
-    return interaction.editReply("⚡ פעולה בוצעה");
 
   } catch (err) {
     console.log("INTERACTION ERROR:", err);
 
     try {
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({
-          content: "⛔ Error occurred",
-          ephemeral: true
-        });
-      }
+      if (interaction.replied || interaction.deferred) return;
+
+      return interaction.reply({
+        content: "⛔ Error occurred",
+        ephemeral: true
+      });
     } catch {}
   }
 });
