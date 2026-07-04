@@ -1,61 +1,43 @@
-client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isButton() && !interaction.isModalSubmit()) return;
+const express = require("express");
+const { Client, GatewayIntentBits, Events } = require("discord.js");
 
-  try {
-    const id = interaction.customId;
+const app = express();
 
-    // =========================
-    // PANEL / BUTTONS / TICKET
-    // =========================
-    if (interaction.isButton()) {
+app.get("/", (req, res) => res.send("OK"));
 
-      if (id === "panel_open") {
-        return interaction.reply({
-          content: "📦 Panel opened",
-          ephemeral: true
-        });
-      }
-
-      if (id === "buy_credits") {
-        return interaction.reply({
-          content: "🎫 Buy system opened",
-          ephemeral: true
-        });
-      }
-
-      if (id === "open_ticket") {
-        return interaction.reply({
-          content: "🎫 Ticket opened",
-          ephemeral: true
-        });
-      }
-
-      return interaction.reply({
-        content: "⚡ פעולה בוצעה",
-        ephemeral: true
-      });
-    }
-
-    // =========================
-    // MODAL HANDLING (אם יש לך בעתיד)
-    // =========================
-    if (interaction.isModalSubmit()) {
-      return interaction.reply({
-        content: "📨 נתונים התקבלו",
-        ephemeral: true
-      });
-    }
-
-  } catch (err) {
-    console.log("INTERACTION ERROR:", err);
-
-    try {
-      if (interaction.replied || interaction.deferred) return;
-
-      return interaction.reply({
-        content: "⛔ Error occurred",
-        ephemeral: true
-      });
-    } catch {}
-  }
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("HTTP server running on port", PORT);
 });
+
+// BOT CLIENT
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
+
+// LOAD MODULES (SAFE)
+try { require("./ticket.js")(client); } catch (e) { console.log("ticket.js error:", e.message); }
+try { require("./casino.js")(client); } catch (e) { console.log("casino.js error:", e.message); }
+try { require("./daily.js")(client); } catch (e) { console.log("daily.js error:", e.message); }
+try { require("./panel.js")(client); } catch (e) { console.log("panel.js error:", e.message); }
+
+// READY EVENT (עדכני לדיסקורד החדש)
+client.once(Events.ClientReady, () => {
+  console.log("BOT ONLINE:", client.user.tag);
+});
+
+// GLOBAL ERROR CATCH (מונע קריסות)
+process.on("unhandledRejection", (err) => {
+  console.log("Unhandled Promise Error:", err);
+});
+
+process.on("uncaughtException", (err) => {
+  console.log("Crash Error:", err);
+});
+
+// LOGIN
+client.login(process.env.DISCORD_TOKEN);
